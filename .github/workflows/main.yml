@@ -45,7 +45,7 @@ jobs:
           push: true
           tags: vokson/flask-app:latest
 
-  deploy:
+  deploy-copy:
     runs-on: ubuntu-latest
     needs: build_and_push_to_docker_hub
     steps:
@@ -57,6 +57,17 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         source: "docker-compose.yaml, nginx/default.conf"
         target: "~/app/"
+
+  deploy-execute:
+    runs-on: ubuntu-latest
+    needs: deploy-copy
+    steps:
+    - name: executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
         script: |
           sudo docker pull vokson/flask-app
           sudo docker stop $(sudo docker ps -a -q)
